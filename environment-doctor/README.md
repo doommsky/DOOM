@@ -8,8 +8,8 @@
 
 | You want to… | Do this |
 | :- | :- |
-| **Use the app on Windows** | Download `Environment-Doctor-<version>-portable.exe` (no install) or `…-nsis.exe` (installer) from the **Environment-Doctor-Windows** artifact of the latest *Environment Doctor* GitHub Actions run, then double-click it. The app is unsigned for now, so on SmartScreen choose **More info → Run anyway**. |
-| Build the `.exe` yourself | `cd environment-doctor && npm ci && npm run dist:win` → `release/` (this also works from Linux or macOS without Wine) |
+| **Use the app on Windows** | Download `Environment-Doctor-<version>-portable.exe` (no install) or `Environment-Doctor-<version>-setup.exe` (installer, per-user, no admin) from the **Environment-Doctor-Windows** artifact of the latest *Environment Doctor* GitHub Actions run, then double-click it. The app is unsigned for now, so on SmartScreen choose **More info → Run anyway**. |
+| Build the `.exe` yourself | On Windows: `cd environment-doctor && npm ci && npm run dist:win` → `release/` (installer + portable). On Linux/macOS: `npm run dist:win:portable` works without Wine; the NSIS installer needs Wine. |
 | Develop the UI in a browser (demo data) | `npm run dev` → <http://localhost:5173> |
 | Run the desktop app from source | `npm start` |
 | Use the CLI | `npm run build:electron && npm run cli -- check` (also `explain <id>`, `fix <id>`, `setup --plan-only`, `list`, `--format json`) |
@@ -56,7 +56,7 @@ tests/electron              real desktop app smoke test (bridge, app://, live sc
 npm run typecheck         # renderer + electron configs
 npm test                  # vitest: engine safety rules, live collectors, components + axe
 npm run test:e2e          # Playwright: acceptance criteria AC-01…AC-26 (builds + serves the renderer)
-npm run build && xvfb-run -a npm run test:electron   # desktop app smoke test (drop xvfb-run on Windows/macOS)
+npm run build && xvfb-run -a npm run test:electron   # real desktop app: security baseline + a live repair → verified → undo (drop xvfb-run on Windows/macOS)
 ```
 CI (`.github/workflows/environment-doctor.yml`) runs all of the above on Linux. On a real **Windows** runner it builds the installer and portable `.exe`, runs a live read-only scan via the CLI (`live-scan.json`) and runs the Electron smoke test.
 

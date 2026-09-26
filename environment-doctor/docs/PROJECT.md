@@ -39,11 +39,16 @@ Environment Doctor is one desktop app that **sets up, diagnoses, fixes and verif
 | D6 | Renderer never supplies filesystem paths; project folders come only from the native picker in main | Spec §2 ("sends IDs, never paths") | One extra channel (`projects.addRoot`) handled in main |
 | D7 | Unsigned build | No code-signing certificate yet (open question) | SmartScreen warning on first run |
 
-### Results
-- **Unit (Vitest):** engine safety rules (15 tests covering AC-03, 07–16, 19, 20, 25, IPC validation), live collectors (4), components + axe.
-- **Screen/flow (Playwright, demo engine):** one spec per screen group (`start`, `diagnosis`, `change`, `library`) covering AC-01…AC-26. See the traceability table below.
-- **Desktop smoke (Playwright for Electron):** real main process, `app://`, no Node in the renderer, preload allowlist, live scan over IPC, navigation lock.
-- **Windows exe:** cross-built here (portable, ~95 MB) and built natively on `windows-latest` in CI.
+### Results (2026-09-26, commit on PR #1)
+| Layer | Tool | Result |
+| :- | :- | :- |
+| Typecheck | `tsc` (renderer + electron configs) | clean |
+| Unit | Vitest: engine safety rules (16), live collectors (4), components + axe (6) | **26 / 26 passed**; axe reports 0 violations on the design-system gallery |
+| Screen/flow | Playwright, demo engine, 4 specs (`start`, `diagnosis`, `change`, `library`) | **48 / 48 passed**, 96 / 96 with `--repeat-each=2` (no flakes) |
+| Desktop | Playwright for Electron | **2 / 2 passed**: security baseline (no Node in the renderer, bridge allowlist, `app://`, navigation lock, live scan) and a **real repair**: create a project `.venv` → verified → undo plan → verified, `.venv` gone |
+| Real Windows | GitHub `windows-latest` (Windows 11 build 26100) | Live CLI scan: every collector returned data; Electron smoke passes; NSIS installer + portable exe built |
+
+Found and fixed by these layers during the build: the sandboxed preload couldn't `require` shared code (now bundled, and a missing bridge is a hard error, never a silent demo fallback); Windows inbox display drivers were flagged as "old" because of the 2006-06-21 placeholder date; dead system PATH entries had no incident; undo plans lacked the original repair's saved state; queued repairs never started; a second run for an already-repairing incident was allowed.
 
 ### Acceptance-criteria traceability
 | AC | Test file | Engine test |
@@ -100,4 +105,4 @@ Environment Doctor is one desktop app that **sets up, diagnoses, fixes and verif
 ## Change log
 | Version | Date | Change |
 | :- | :- | :- |
-| 0.9.0 | 2026-09-26 | First complete build: engine (demo + live), Electron shell, 22 screens, CLI, tests, Windows packaging, CI |
+| 0.9.0 | 2026-09-26 | First complete build: engine (demo + live), Electron shell, 22 screens, CLI, tests, Windows packaging, CI. Integration fixes: bundled sandboxed preload, inbox-driver dates, system-PATH incident, undo from saved state, queued repairs auto-start, one run per incident |
