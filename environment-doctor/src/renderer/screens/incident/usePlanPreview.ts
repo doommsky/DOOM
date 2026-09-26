@@ -8,18 +8,19 @@ type PlanReq = Omit<Req<'plan.forIncident'>, 'incidentId'>;
  * Loads the draft plan the orchestrator would propose (plan.forIncident is stable while a draft exists),
  * so the diagnosis can say “Fix ready · N steps” or “There’s no safe fix for this yet”. Nothing is approved here.
  */
-export function usePlanPreview(incidentId: string, enabled: boolean, req: PlanReq = {}) {
+export function usePlanPreview(incidentId: string, enabled: boolean, req: PlanReq = {}, existingPlanId?: string) {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [loading, setLoading] = useState(enabled);
   const key = JSON.stringify(req);
   const load = useCallback(async (alive: { v: boolean } = { v: true }) => {
     setLoading(true);
-    const r = await call('plan.forIncident', { incidentId, ...(JSON.parse(key) as PlanReq) });
+    // Setup incidents already carry the plan their dry run produced; everything else asks for the draft fix.
+    const r = existingPlanId ? await call('plan.get', { id: existingPlanId }) : await call('plan.forIncident', { incidentId, ...(JSON.parse(key) as PlanReq) });
     if (!alive.v) return;
     if (r.ok) { setPlan(r.data); setError(null); } else { setPlan(null); setError(r.error); }
     setLoading(false);
-  }, [incidentId, key]);
+  }, [incidentId, key, existingPlanId]);
   useEffect(() => {
     if (!enabled) { setLoading(false); return; }
     const alive = { v: true };

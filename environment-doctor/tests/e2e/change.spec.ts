@@ -44,7 +44,7 @@ test.describe('06 Plan & approval', () => {
     await open(page, PLAN);
     await expect(page.getByRole('heading', { name: 'Here’s the fix' })).toBeVisible();
     const steps = page.getByRole('list', { name: 'Plan steps' });
-    await expect(steps.getByRole('listitem')).toHaveCount(2);
+    await expect(steps.locator(':scope > li')).toHaveCount(2);
     await expect(steps.getByText('Needs admin')).toHaveCount(1);
     await expect(steps.getByText('Your account')).toHaveCount(1);
 
@@ -115,7 +115,7 @@ test.describe('06 Plan & approval', () => {
     await expect(page).toHaveURL(/\/incidents\/INC-0042\/plan/);
     expect(await api(page, 'run.get', { incidentId: 'INC-0042' })).toBeNull();
     // The new plan is loaded for review, with the change marked, and needs a fresh approval.
-    const changed = page.getByRole('list', { name: 'Plan steps' }).getByRole('listitem').filter({ hasText: 'Changed' });
+    const changed = page.getByRole('list', { name: 'Plan steps' }).locator(':scope > li').filter({ hasText: 'Changed' });
     await expect(changed).toHaveCount(1);
     await expect(changed).toContainText('(changed)');
     await expect(page.getByRole('heading', { name: 'Approve this exact plan' })).toBeVisible();
@@ -143,7 +143,7 @@ test.describe('26 Admin hand-off', () => {
     await declined.getByRole('link', { name: 'Run only the steps that don’t need admin' }).click();
     await expect(page).toHaveURL(/variant=user-only/);
     const steps = page.getByRole('list', { name: 'Plan steps' });
-    await expect(steps.getByRole('listitem')).toHaveCount(1);
+    await expect(steps.locator(':scope > li')).toHaveCount(1);
     await expect(steps).toContainText('Remove a dead PATH entry');
     await expect(steps.getByText('Your account')).toBeVisible();
     await expect(steps.getByText('Needs admin')).toHaveCount(0);
@@ -160,7 +160,7 @@ test.describe('26 Admin hand-off', () => {
     await expect(dlg.getByRole('button', { name: 'Repair the app install' })).toBeVisible();
     await expect(dlg).not.toContainText('Simulated Windows prompt');
     // Repairs are paused app-wide (sidebar guard state), and nothing ran.
-    await expect(page.getByText('Repairs paused')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Primary' }).getByText('Repairs paused')).toBeVisible();
     const run = await api<RunProgress>(page, 'run.get', { incidentId: 'INC-0042' });
     expect(run.steps.some((s) => s.state === 'done')).toBe(false);
     // Closing the dialog keeps the red state on the page.
@@ -313,7 +313,7 @@ test.describe('10 Guided repair · 11 Resume', () => {
     // Continuing always goes through a fresh approval of the remaining steps.
     await expect(page).toHaveURL(/\/incidents\/INC-0043\/plan\?planId=/);
     await expect(page.getByRole('heading', { name: 'Approve this exact plan' })).toBeVisible();
-    await expect(page.getByRole('list', { name: 'Plan steps' }).getByRole('listitem')).toHaveCount(3);
+    await expect(page.getByRole('list', { name: 'Plan steps' }).locator(':scope > li')).toHaveCount(3);
     await expect(page.getByRole('button', { name: 'Approve plan' })).toBeDisabled();
   });
 });

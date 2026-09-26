@@ -98,8 +98,8 @@ export function Page({ crumbs, actions, children, split, aside, bleed }: { crumb
         </div>
       </header>
       {split
-        ? <main className="content-split"><div className="primary">{children}</div><aside className="aside" aria-label="Details">{aside}</aside></main>
-        : bleed ? children : <main className="content">{children}</main>}
+        ? <main className="content-split" id="main" tabIndex={-1}><div className="primary">{children}</div><aside className="aside" aria-label="Details">{aside}</aside></main>
+        : bleed ? children : <main className="content" id="main" tabIndex={-1}>{children}</main>}
     </>
   );
 }
@@ -123,7 +123,6 @@ export function Shell() {
         {b && b.kind === 'helper-untrusted' && <Banner kind="danger" role="alert">{b.text} <button type="button" className="btn ghost sm" onClick={() => nav('/settings/updates')}>Repair the app install</button></Banner>}
         {b && b.kind === 'backup-restored' && <Banner kind="warn">{b.text} <Link to="/history">What happened</Link></Banner>}
         {b && b.kind === 'offline' && <Banner kind="info">{b.text}</Banner>}
-        <span id="main" tabIndex={-1} className="sr-only">Main content</span>
         <Outlet />
       </div>
       <div className="toasts" aria-live="polite" aria-atomic="false">

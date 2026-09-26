@@ -71,6 +71,23 @@ test.describe('05 Dev issue diagnosis', () => {
   });
 });
 
+test.describe('05 header actions', () => {
+  test('Close incident asks first, changes nothing on the PC and shows the closed summary (INC-0041)', async ({ page }) => {
+    await open(page, '/incidents/INC-0041');
+    await expect(page.getByText(/Fix ready · 1 step/)).toBeVisible();
+    await page.getByRole('button', { name: 'Close incident' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Close INC-0041' });
+    await expect(dialog).toContainText('Nothing on your PC changes');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await page.getByRole('button', { name: 'Close incident' }).click();
+    await dialog.getByRole('button', { name: 'Close incident' }).click();
+    await expect(page.locator('.toast').filter({ hasText: 'INC-0041 closed' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'What ran' })).toContainText('No repair record');
+    await expect(page.getByRole('link', { name: 'Open History' })).toBeVisible();
+  });
+});
+
 test.describe('16 Partly fixed', () => {
   test('AC-16 one check fails, run ends → PARTIALLY_VERIFIED; new evidence and next options shown (INC-0044)', async ({ page }) => {
     await open(page, '/diagnose');
@@ -207,9 +224,12 @@ test.describe('09 Freeze / crash diagnosis', () => {
     await expect(group.getByRole('radio', { name: /Quick: roll back the driver/ })).toContainText('1 step');
     await page.getByRole('button', { name: 'Plan the rollback' }).click();
     await expect(page).toHaveURL(/#\/incidents\/INC-0043\/plan\?variant=rollback$/);
+    await expect(group).toHaveCount(0); // the plan screen replaced this one (route transitions may lag the URL)
     await page.goto('/?speed=20#/incidents/INC-0043');
+    await group.getByRole('radio', { name: /Thorough: clean driver reinstall/ }).click();
     await page.getByRole('button', { name: 'Start guided repair' }).click();
     await expect(page).toHaveURL(/#\/incidents\/INC-0043\/guided$/);
+    await expect(group).toHaveCount(0);
     await page.goto('/?speed=20#/incidents/INC-0043');
     await page.getByRole('link', { name: 'What the AI sees' }).first().click();
     await expect(page).toHaveURL(/#\/evidence\/preview\/INC-0043$/);

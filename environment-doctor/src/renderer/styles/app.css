@@ -139,7 +139,7 @@ h1, h2, h3, p { margin: 0; }
 .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.fail { background: var(--danger-dot); }
 .dot.unknown { background: transparent; border: 1.5px dashed var(--muted); }
 .dot.accent { background: var(--accent); } .dot.neutral { background: var(--faint); }
-.etag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: var(--r-sm); font-family: var(--mono); font-size: 11px; background: var(--accent-tint); color: var(--accent); text-decoration: none; }
+.etag { display: inline-flex; align-items: center; height: 24px; padding: 0 7px; border-radius: var(--r-sm); font-family: var(--mono); font-size: 11px; background: var(--accent-tint); color: var(--accent); text-decoration: none; }
 .etag.test { background: var(--ok-tint); color: var(--ok); }
 .etag.secret { background: var(--warn-tint); color: var(--warn); }
 kbd, .kbd { font-family: var(--mono); font-size: 10.5px; padding: 2px 5px; border-radius: 5px; border: 1px solid var(--border-strong); color: var(--muted); background: transparent; }

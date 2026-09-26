@@ -16,7 +16,7 @@ export function DevDiagnosis({ inc, run, reload }: ViewProps) {
   const blocked = inc.status === 'blocked';
   const stale = !!inc.stale;
   const wantPlan = !active && !blocked && !stale;
-  const plan = usePlanPreview(inc.id, wantPlan);
+  const plan = usePlanPreview(inc.id, wantPlan, {}, inc.type === 'setup' ? inc.planId : undefined);
   const step = loopStepFor(inc, run, !!plan.plan);
 
   return (

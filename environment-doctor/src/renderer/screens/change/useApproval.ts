@@ -143,9 +143,9 @@ export function useApproval(o: ApprovalOptions) {
       return;
     }
     if (e.code === 'E_APPROVAL_MISMATCH') {
+      setStage('review');
       resetApproval();
       if (await showChangedPlan(e.ref, plan, e.headline, e.didNotHappen ?? 'Nothing ran.')) return;
-      setStage('review');
     }
     setActionError(e);
   };
