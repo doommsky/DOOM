@@ -99,7 +99,7 @@ export function Page({ crumbs, actions, children, split, aside, bleed }: { crumb
       </header>
       {split
         ? <div className="content-split"><div className="primary">{children}</div><aside className="aside" aria-label="Details">{aside}</aside></div>
-        : bleed ? children : <main className="content" id="main">{children}</main>}
+        : bleed ? children : <main className="content">{children}</main>}
     </>
   );
 }
@@ -117,12 +117,13 @@ export function Shell() {
   const b = health?.banner;
   return (
     <div className="shell">
-      <a href="#main" className="sr-only">Skip to content</a>
+      <button type="button" className="sr-only skip-link" onClick={() => document.getElementById('main')?.focus()}>Skip to content</button>
       <Sidebar />
       <div className="main">
         {b && b.kind === 'helper-untrusted' && <Banner kind="danger" role="alert">{b.text} <button type="button" className="btn ghost sm" onClick={() => nav('/settings/updates')}>Repair the app install</button></Banner>}
         {b && b.kind === 'backup-restored' && <Banner kind="warn">{b.text} <Link to="/history">What happened</Link></Banner>}
         {b && b.kind === 'offline' && <Banner kind="info">{b.text}</Banner>}
+        <span id="main" tabIndex={-1} className="sr-only">Main content</span>
         <Outlet />
       </div>
       <div className="toasts" aria-live="polite" aria-atomic="false">

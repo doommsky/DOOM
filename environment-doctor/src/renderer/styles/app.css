@@ -230,3 +230,5 @@ details > summary { cursor: pointer; list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 .lock-pill { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px; border-radius: var(--r-pill); font-size: 12px; background: var(--accent-tint); color: var(--accent); text-decoration: none; }
 .demo-pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: var(--r-pill); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; background: var(--warn-tint); color: var(--warn); text-transform: uppercase; }
+
+.skip-link:focus { position: fixed; left: 12px; top: 12px; width: auto; height: auto; clip: auto; z-index: 100; padding: 8px 12px; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: var(--r-md); }
