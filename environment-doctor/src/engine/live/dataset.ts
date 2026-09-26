@@ -166,10 +166,12 @@ export class LiveDataset implements Dataset {
       // Drivers
       const disp = w.display ?? [];
       const dEid = b.evidence('drivers', 'Display drivers', 'Drivers', 'drivers', 'internal', disp.map((d) => ({ key: d.name, value: `${d.version} · ${d.date} · ${d.signed ? 'signed' : 'UNSIGNED'}${d.signer ? ' · ' + d.signer : ''}` })));
-      const old = disp.find((d) => d.date && Date.now() - Date.parse(d.date) > 540 * 86400e3);
+      // Windows inbox drivers carry the placeholder date 2006-06-21 — their age means nothing.
+      const inbox = (d: { date: string; signer: string; name: string }) => d.date <= '2006-06-21' || /microsoft windows/i.test(d.signer);
+      const old = disp.find((d) => d.date && !inbox(d) && Date.now() - Date.parse(d.date) > 540 * 86400e3);
       const dst: CheckStatus = disp.some((d) => !d.signed) ? 'fail' : old ? 'warn' : disp.length ? 'ok' : 'unknown';
       b.item('drivers', dst, disp[0] ? `${disp[0].name.split(' ').slice(0, 3).join(' ')} ${disp[0].version}` : 'No display driver found');
-      b.row('pc', { id: 'gpu-driver', name: 'Display driver', note: disp[0] ? `${disp[0].version} · ${disp[0].date}${old ? ' · over 18 months old' : ''}` : 'Not found', status: dst, incidentId: counts.display ? b.incidents.find((i) => i.rule?.key === 'stability')?.id : undefined });
+      b.row('pc', { id: 'gpu-driver', name: 'Display driver', note: disp[0] ? (inbox(disp[0]) ? `Windows built-in driver · ${disp[0].name}` : `${disp[0].version} · ${disp[0].date}${old ? ' · over 18 months old' : ''}`) : 'Not found', status: dst, incidentId: counts.display ? b.incidents.find((i) => i.rule?.key === 'stability')?.id : undefined });
       const unsigned = w.unsignedDrivers ?? 0;
       b.row('pc', { id: 'drivers', name: 'Other drivers', note: unsigned ? `${unsigned} unsigned` : 'All signed', status: unsigned ? 'warn' : 'ok' });
       void dEid;
@@ -232,6 +234,13 @@ export class LiveDataset implements Dataset {
       b.finding(`${missingUser.length} dead PATH entr${missingUser.length === 1 ? 'y' : 'ies'}`, 'warn', pathInc);
     } else if (missingOther.length) {
       pathSt = 'warn'; pathNote = `${missingOther.length} dead entr${missingOther.length === 1 ? 'y' : 'ies'} in the system PATH (admin)`;
+      pathInc = b.incident('path.system.missing', {
+        type: 'dev', title: `The system PATH has ${missingOther.length} folder${missingOther.length === 1 ? '' : 's'} that don’t exist`, summary: 'These entries apply to every account on this PC. Changing them needs admin rights, which this build never uses.',
+        rootCause: { title: `Dead system entries: ${missingOther.slice(0, 3).map((e) => redact(e.dir)).join(', ')}${missingOther.length > 3 ? '…' : ''}`, detail: 'Proven by a direct test on each folder.', confidence: 'confirmed', evidenceIds: [testEid, pEid] },
+        hypotheses: [{ id: 'ps1', title: 'An uninstaller left system entries behind', confidence: 'high', evidenceIds: [pEid], detail: 'Harmless for most tools, but every command lookup checks these folders first.', test: 'As an administrator: Settings › System › About › Advanced system settings › Environment Variables › System variables › Path.' }],
+        evidence: [{ id: testEid, text: `${missingOther.length} system folder(s) don’t exist`, meta: 'Direct test · just now', kind: 'for' }],
+        rule: { key: 'path.system.missing', params: {} },
+      });
     }
     if (dupUser.length) {
       const dupInc = b.incident('path.dup', {

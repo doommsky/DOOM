@@ -92,8 +92,7 @@
         }
       ],
       "icon": "build/icon.png",
-      "requestedExecutionLevel": "asInvoker",
-      "artifactName": "Environment-Doctor-${version}-${arch}-${target}.${ext}"
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
@@ -102,7 +101,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Environment Doctor",
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Environment-Doctor-${version}-setup.${ext}"
     },
     "portable": {
       "artifactName": "Environment-Doctor-${version}-portable.exe"
