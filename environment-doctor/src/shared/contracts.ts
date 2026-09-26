@@ -182,6 +182,8 @@ export interface Incident {
   /** Learned during a partial fix (screen 16). */
   learned?: string[];
   source: 'scan' | 'describe' | 'setup' | 'demo';
+  /** Engine-internal: which deterministic rule raised it and its (non-secret) parameters. */
+  rule?: { key: string; params: Record<string, string> };
 }
 
 export interface IncidentSummary {

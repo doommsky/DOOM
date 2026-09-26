@@ -450,6 +450,11 @@ export class Engine {
     this.s.incidents[incId] = inc;
     for (const p of Object.values(this.s.plans)) if (p.incidentId === incId && p.status === 'draft') p.status = 'superseded';
     const plan = await this.materialise(inc, draft, 'setup');
+    if (!plan.steps.some((x) => !x.removedReason)) {
+      plan.status = 'superseded';
+      await this.save();
+      return rest;
+    }
     inc.planId = plan.id;
     await this.save();
     return { ...rest, planId: plan.id };

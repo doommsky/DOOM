@@ -34,7 +34,11 @@ function createInProcessBridge(): EnvDoctorBridge {
 }
 
 export function getBridge(): EnvDoctorBridge {
-  if (!bridge) bridge = window.envDoctor ?? createInProcessBridge();
+  if (!bridge) {
+    // Inside the desktop app a missing bridge is a hard error — never silently fall back to demo data.
+    if (!window.envDoctor && window.location.protocol === 'app:') throw new Error('The secure bridge to the Environment Doctor engine did not load.');
+    bridge = window.envDoctor ?? createInProcessBridge();
+  }
   return bridge;
 }
 
