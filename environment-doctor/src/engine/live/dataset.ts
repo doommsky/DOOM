@@ -573,6 +573,11 @@ export class LiveDataset implements Dataset {
   }
 
   async precheck(step: PlanStep, ctx: StepContext): Promise<{ label: string; ok: boolean }[]> {
+    if (step.undoOf) {
+      if (step.actionId.startsWith('env.path.user')) return [{ label: 'The PATH saved before the repair is available', ok: ctx.memo.savedPath !== undefined }];
+      if (step.actionId === 'python.venv.create') return [{ label: 'The .venv was created by Environment Doctor', ok: ctx.memo.venvCreated === '1' && !!ctx.memo.venvPath }, { label: 'Only that .venv folder is removed', ok: true }];
+      return [{ label: 'This step can be undone', ok: false }];
+    }
     const entry = this.catalog().find((a) => a.id === step.actionId);
     if (!entry?.availableInThisBuild) return [{ label: 'Action is available in this build', ok: false }];
     if (step.actionId === 'env.path.user.remove_entry' || step.actionId === 'env.path.user.dedupe') {
@@ -651,6 +656,18 @@ export class LiveDataset implements Dataset {
 
   async verify(check: VerificationCheck, ctx: StepContext) {
     try {
+      if (check.id === 'u1') {
+        if (ctx.memo.savedPath !== undefined) {
+          const cur = await this.readUserPath();
+          const same = splitPath(cur.value).join(';') === splitPath(ctx.memo.savedPath).join(';');
+          return { pass: same, detail: same ? 'PATH is exactly what it was before the repair' : 'PATH differs from the saved copy' };
+        }
+        if (ctx.memo.venvPath) {
+          const gone = !fs.existsSync(path.join(ctx.memo.venvPath, '.venv'));
+          return { pass: gone, detail: gone ? '.venv removed — the project is as it was' : '.venv is still there' };
+        }
+        return { pass: false, detail: 'Nothing saved to compare against' };
+      }
       if (ctx.memo.expected !== undefined && ctx.memo.savedPath !== undefined) {
         const cur = await this.readUserPath();
         if (check.id === 'v1') {

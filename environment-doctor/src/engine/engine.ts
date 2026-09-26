@@ -56,6 +56,8 @@ interface EngineState {
   scanSeq: number;
   /** Approvals waiting for the lock (spec §8: other repairs queue). Started in order when the lock frees. */
   queued?: Record<string, { approvalId: string; planHash: string }>;
+  /** What the last execution saved per incident (e.g. the old PATH) — the only source an undo plan may restore from. */
+  memos?: Record<string, Record<string, string>>;
 }
 
 export class EngineError extends Error {
@@ -415,6 +417,7 @@ export class Engine {
       const last = Object.values(this.s.plans).filter((p) => p.incidentId === incidentId && p.status === 'executed').pop();
       const run = this.s.runs[incidentId];
       if (!last || !run) fail(err('E_NOT_FOUND', 'Nothing to undo for this incident', 'Nothing changed.'));
+      if (this.dataset.mode === 'live' && !Object.keys(this.s.memos?.[incidentId] ?? {}).some((k) => k !== 'variant')) fail(err('E_RECOVERY_UNKNOWN', 'The saved state for an undo is missing', 'Nothing changed.', 'Undo manually, or re-diagnose.'));
       const doneIds = run!.steps.filter((x) => x.state === 'done').map((x) => x.id);
       draft = {
         title: 'Undo · ' + last!.title, kind: 'fix', estimatedMinutes: last!.estimatedMinutes,
@@ -593,7 +596,7 @@ export class Engine {
     const active = plan.steps.filter((x) => !x.removedReason);
     this.s.journal = {
       executionId, incidentId: plan.incidentId, planId: plan.id, state: 'APPROVED', reason: 'Repair in progress', completedSteps: [], pendingSteps: active.map((x) => x.id),
-      unknownSteps: [], savedAt: new Date(this.host.now()).toISOString(), rechecks: [], memo: this.ctxFor(plan, executionId).memo, fingerprint: {},
+      unknownSteps: [], savedAt: new Date(this.host.now()).toISOString(), rechecks: [], memo: (plan as { variant?: string }).variant === 'undo' ? { ...(this.s.memos?.[plan.incidentId] ?? {}), variant: 'undo' } : this.ctxFor(plan, executionId).memo, fingerprint: {},
     };
     await this.save();
     this.emitRun(run);
@@ -757,6 +760,7 @@ export class Engine {
       for (const p of this.s.projects) if (!p.requirements.some((r) => r.status !== 'ok')) p.status = 'ok';
     }
     plan.status = 'executed';
+    if (this.s.journal && (plan as { variant?: string }).variant !== 'undo') (this.s.memos ??= {})[plan.incidentId] = { ...this.s.journal.memo };
     this.s.journal = null;
     this.s.lock = { held: false, queue: this.s.lock.queue };
     if (state === 'VERIFIED') this.log(run, 'Incident verified · lock released', 'ok');
