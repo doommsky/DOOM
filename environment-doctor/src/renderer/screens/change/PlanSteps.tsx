@@ -83,7 +83,7 @@ function StepCard({ n, step: s, open, onToggle, changed, why }: { n: number; ste
           <span className="t-title row wrap" style={{ gap: 8 }}><span className="sr-only">Step {n}: </span>{s.title}{changed && <span className="chip warn">Changed</span>}</span>
           <span className="mono t-small c-muted ch-target">{s.targetSummary}</span>
         </span>
-        <span className="row wrap end" style={{ gap: 6, maxWidth: 260 }}>
+        <span className="row wrap end" style={{ gap: 6, maxWidth: 340 }}>
           <span className={`chip ${s.privilege === 'admin' ? 'warn' : 'neutral'}`}>{s.privilege === 'admin' ? 'Needs admin' : 'Your account'}</span>
           <span className={`chip ${s.risk === 'high' ? 'fail' : 'neutral'}`}>{riskWord(s.risk)} risk</span>
           {s.reboot && <span className="chip neutral"><Icon name="restart" size={12} />Restart</span>}
@@ -121,7 +121,7 @@ export function VerificationContract({ plan }: { plan: Plan }) {
       <ol className="ch-ver" aria-label="Verification contract">
         {plan.verification.map((v) => (
           <li key={v.id}>
-            <span className="row between"><span className="chip neutral mono">{v.tier}</span><span className="t-small c-subtle">{TIER_WORD[v.tier]}</span></span>
+            <span className="tier"><span className="chip neutral mono">{v.tier}</span>{TIER_WORD[v.tier]}</span>
             <span>{v.label}</span>
           </li>
         ))}

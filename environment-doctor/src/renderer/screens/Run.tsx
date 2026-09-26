@@ -74,8 +74,9 @@ function Execute({ run, f, plan, crumbs }: { run: RunProgress; f: Follow; plan: 
         {run.state === 'WAITING_FOR_REBOOT' && <RestartCard run={run} f={f} />}
         {f.decideError && <ErrorState compact error={f.decideError} />}
         <Outcome run={run} />
-        <Steps run={run} plan={plan} />
-        {!stopped && <Checks run={run} />}
+        {progressOf(run).verifying
+          ? <><Checks run={run} /><Steps run={run} plan={plan} /></>
+          : <><Steps run={run} plan={plan} />{!stopped && <Checks run={run} />}</>}
       </main>
     </Page>
   );
@@ -428,7 +429,7 @@ function Drift({ run, f, plan, crumbs }: { run: RunProgress; f: Follow; plan: Pl
             <tbody>
               {run.drift.map((d) => (
                 <tr key={d.id}>
-                  <th scope="row" style={{ textAlign: 'left', fontWeight: 500 }}>{d.what}</th>
+                  <th scope="row" className="ch-rowhead">{d.what}</th>
                   <td className="mono c-muted">{d.before}</td>
                   <td className="mono c-warn">{d.after}</td>
                   <td className="t-small c-text2">{d.source}</td>

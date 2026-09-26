@@ -186,7 +186,7 @@ export default function Resume() {
         <aside aria-label="Recovery details">
           <section className="card" aria-labelledby="ch-journal-h">
             <h2 id="ch-journal-h" className="t-title">Recovery journal</h2>
-            <dl className="kv" style={{ gridTemplateColumns: '120px 1fr' }}>
+            <dl>
               <dt>Last saved state</dt><dd>{j.state}</dd>
               <dt>Saved at</dt><dd>{clock(j.savedAt)}</dd>
               <dt>Repair</dt><dd>{j.executionId}</dd>

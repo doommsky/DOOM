@@ -83,7 +83,7 @@ export function useApproval(o: ApprovalOptions) {
     if (adminSteps.length) parts.push(`${n(adminSteps)} ${adminSteps.length > 1 ? 'need' : 'needs'} admin rights, and Windows will ask me to confirm`);
     if (plan.requiresReboot) parts.push('my PC will restart during the repair, and I’ll approve again after the restart');
     if (highSteps.length) parts.push(`${n(highSteps)} ${highSteps.length > 1 ? 'are' : 'is'} high risk`);
-    return `I understand ${listJoin(parts)}.`;
+    return `I understand ${parts.join('; ')}.`;
   })();
 
   const now = useNow(!!approval);

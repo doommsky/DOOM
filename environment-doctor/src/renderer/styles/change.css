@@ -28,8 +28,9 @@
 .ch-why p { margin-top: 6px; }
 
 /* ───────── verification contract ───────── */
-.ch-ver { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.ch-ver { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .ch-ver li { padding: 12px 14px; border-radius: 12px; background: var(--inset); display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+.ch-ver li .tier { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--subtle); }
 
 /* ───────── approval panel ───────── */
 .ch-panel { border-color: var(--border-accent); padding: 22px; gap: 16px; }
@@ -118,6 +119,7 @@
 
 /* ───────── drift ───────── */
 .ch-drift-head { border-color: color-mix(in srgb, var(--danger-dot) 40%, transparent); background: color-mix(in srgb, var(--danger-dot) 5%, var(--surface)); gap: 16px; }
+.ch-rowhead { text-align: left; font-weight: 500; font-size: 13px; letter-spacing: normal; text-transform: none; color: var(--text); padding: 10px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
 .ch-notrun { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--warn) 50%, transparent); background: color-mix(in srgb, var(--warn) 6%, transparent); }
 
 /* ───────── admin hand-off (board 26) ───────── */
@@ -174,6 +176,10 @@
 .ch-resume > .card.main { flex: 1 1 auto; min-width: 0; }
 .ch-resume > aside { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
 .ch-resume > aside .card { padding: 20px 22px; }
+.ch-resume > aside dl { margin: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.ch-resume > aside dt { color: var(--subtle); font-size: 12px; margin-top: 8px; }
+.ch-resume > aside dt:first-child { margin-top: 0; }
+.ch-resume > aside dd { margin: 0; font-family: var(--mono); font-size: 12.5px; color: var(--text-2); overflow-wrap: anywhere; }
 .ch-safemode { position: fixed; top: 0; left: 0; right: 0; height: 40px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; background: var(--warn-tint); border-bottom: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); color: var(--warn-2); }
 .ch-rechecks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .ch-rechecks li { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border-soft); transition: opacity var(--dur-base); }

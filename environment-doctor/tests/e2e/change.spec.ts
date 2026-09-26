@@ -100,7 +100,7 @@ test.describe('06 Plan & approval', () => {
     await expect(page).toHaveURL(/\/incidents\/INC-0042\/plan/);
     expect(await api(page, 'run.get', { incidentId: 'INC-0042' })).toBeNull();
 
-    await alert.getByRole('button', { name: 'Re-check and review' }).click();
+    await page.getByRole('button', { name: 'Re-check and review' }).click();
     await expect(page.getByRole('heading', { name: 'Approve this exact plan' })).toBeVisible();
     await expect(page.getByRole('checkbox', { name: /I understand/ })).not.toBeChecked();
     await expect(page.getByRole('button', { name: 'Approve plan' })).toBeDisabled();
