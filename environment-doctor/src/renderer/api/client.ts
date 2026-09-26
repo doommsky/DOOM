@@ -28,7 +28,8 @@ function createInProcessBridge(): EnvDoctorBridge {
   };
   return {
     platform: 'browser',
-    invoke: (channel, req) => orch.handle(channel, req),
+    // Structured-clone both ways, exactly like Electron IPC, so the UI can never hold live engine objects.
+    invoke: async (channel, req) => structuredClone(await orch.handle(channel, req === undefined ? req : structuredClone(req))),
     subscribe: (stream, cb) => host.on(stream, cb as (d: unknown) => void),
   };
 }

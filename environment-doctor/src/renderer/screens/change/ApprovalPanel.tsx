@@ -55,18 +55,15 @@ function Head({ icon, tone, title, sub, focusRef }: { icon: 'shield' | 'shieldCh
 function Binding({ a, tech, onTech }: { a: ApprovalApi; tech: boolean; onTech: () => void }) {
   const plan = a.plan!;
   const techId = useId();
-  const expiry = a.stage === 'expired'
-    ? 'Ran out — nothing ran'
-    : a.approval
-      ? <>Runs out in <span className="ch-timer" role="timer" aria-live="off">{mmss(a.remainingMs)}</span> or at restart</>
-      : '15 min or restart, whichever is first';
   return (
     <>
       <div className="ch-bind">
         <dl>
           <div><dt>Plan fingerprint</dt><dd className="mono" title={plan.binding.planHash}>{shortHash(plan.binding.planHash)}</dd></div>
           <div><dt>Evidence snapshot</dt><dd className="mono">{plan.binding.evidenceSnapshot}</dd></div>
-          <div><dt>Expires</dt><dd>{expiry}</dd></div>
+          <div><dt>Expires</dt><dd>15 min or restart, whichever is first</dd></div>
+          {a.stage === 'expired' && <div><dt>Status</dt><dd>Ran out — nothing ran</dd></div>}
+          {a.stage !== 'expired' && a.approval && <div><dt>Time left</dt><dd><span className="ch-timer" role="timer" aria-live="off">{mmss(a.remainingMs)}</span></dd></div>}
         </dl>
         {tech && (
           <dl className="ch-tech" id={techId}>

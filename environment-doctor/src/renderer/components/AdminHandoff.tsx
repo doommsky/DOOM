@@ -157,7 +157,7 @@ function Content({ run, state, onAllow, onDecline, busy, titleRef }: { run: RunP
       <div className="ch-uac-foot">
         {userSteps !== 0 && <LinkButton to={`/incidents/${run.incidentId}/plan?variant=user-only`} variant="primary" icon="user">Run only the steps that don’t need admin</LinkButton>}
         <LinkButton to={`/incidents/${run.incidentId}`}>Keep incident open</LinkButton>
-        <LinkButton to={`/incidents/${run.incidentId}/plan`} variant="ghost">Try again</LinkButton>
+        <LinkButton to={`/incidents/${run.incidentId}/${plan?.kind === 'guided' ? 'guided' : 'plan'}`} variant="ghost">Try again</LinkButton>
       </div>
       <span className="t-small c-subtle">Logged as: {declined ? 'declined by you' : 'timed out'}</span>
     </div>

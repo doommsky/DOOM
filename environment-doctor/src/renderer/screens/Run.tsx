@@ -66,7 +66,7 @@ function Execute({ run, f, plan, crumbs }: { run: RunProgress; f: Follow; plan: 
 
   return (
     <Page crumbs={crumbs} actions={actions} split aside={<Aside run={run} holdsLock={holdsLock} />}>
-      <main id="main" className="col" style={{ gap: 18 }}>
+      <div className="col" style={{ gap: 18 }}>
         {overlay && <AdminHandoff run={run} mode="overlay" onAllow={allow} onDecline={decline} onClose={closeOverlay} busy={!!f.deciding} />}
         {stopped && !overlay && <AdminHandoff run={run} mode="inline" onAllow={allow} onDecline={decline} busy={!!f.deciding} />}
         {!stopped && <Hero run={run} f={f} />}
@@ -77,7 +77,7 @@ function Execute({ run, f, plan, crumbs }: { run: RunProgress; f: Follow; plan: 
         {progressOf(run).verifying
           ? <><Checks run={run} /><Steps run={run} plan={plan} /></>
           : <><Steps run={run} plan={plan} />{!stopped && <Checks run={run} />}</>}
-      </main>
+      </div>
     </Page>
   );
 }
@@ -339,7 +339,7 @@ function Queued({ run, f, crumbs }: { run: RunProgress; f: Follow; crumbs: Crumb
   const behind = run.queuedBehind!;
   return (
     <Page crumbs={crumbs} split aside={<Activity run={run} />}>
-      <main id="main" className="col" style={{ gap: 18 }}>
+      <div className="col" style={{ gap: 18 }}>
         <section className="card ch-queued" role="status" aria-labelledby="ch-queued-h">
           <div className="row start gap-4">
             <span className="ch-icon neutral lg" aria-hidden="true"><Icon name="clock" size={22} /></span>
@@ -358,7 +358,7 @@ function Queued({ run, f, crumbs }: { run: RunProgress; f: Follow; crumbs: Crumb
         </section>
         {f.decideError && <ErrorState compact error={f.decideError} />}
         <Steps run={run} plan={null} />
-      </main>
+      </div>
     </Page>
   );
 }
@@ -395,7 +395,7 @@ function Drift({ run, f, plan, crumbs }: { run: RunProgress; f: Follow; plan: Pl
   );
   return (
     <Page crumbs={crumbs} actions={<span className="chip neutral"><Icon name="lock" size={12} />Paused while you decide</span>} split aside={aside}>
-      <main id="main" className="col" style={{ gap: 18 }}>
+      <div className="col" style={{ gap: 18 }}>
         <section className="card ch-drift-head" role="alert" aria-labelledby="ch-drift-h">
           <div className="row start gap-4">
             <span className="ch-icon danger lg" aria-hidden="true"><Icon name="alert" size={22} /></span>
@@ -457,7 +457,7 @@ function Drift({ run, f, plan, crumbs }: { run: RunProgress; f: Follow; plan: Pl
             </ul>
           </Card>
         </div>
-      </main>
+      </div>
     </Page>
   );
 }

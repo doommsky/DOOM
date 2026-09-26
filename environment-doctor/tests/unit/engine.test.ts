@@ -167,6 +167,24 @@ describe('engine', () => {
     expect(q.error?.code).toBe('E_MUTATION_BUSY');
   });
 
+  it('a queued repair starts by itself when the lock frees, and a second run for the same incident is refused', async () => {
+    const t = setup();
+    await t.scan();
+    const a = await approve(t, 'INC-0042');
+    await t.call('run.start', { approvalId: a.ap.approvalId, planHash: a.ap.planHash });
+    const w = await t.waitRun('INC-0042', (r) => r.adminPrompt === 'waiting');
+    const again = await t.call('plan.forIncident', { incidentId: 'INC-0042', variant: 'user-only' });
+    const ap2 = await t.call('approval.submit', { planId: again.id, planHash: again.binding.planHash, uiConfirmationVersion: UI_CONFIRMATION_VERSION, acknowledged: true });
+    expect((await t.callErr('run.start', { approvalId: ap2.approvalId, planHash: ap2.planHash })).code).toBe('E_MUTATION_BUSY');
+    const b = await approve(t, 'INC-0041');
+    const q = await t.call('run.start', { approvalId: b.ap.approvalId, planHash: b.ap.planHash });
+    expect(q.queuedBehind).toBe('INC-0042');
+    await t.call('run.decide', { executionId: w.executionId, decision: 'admin-allow' });
+    await t.waitRun('INC-0042', (r) => r.state === 'VERIFIED');
+    const started = await t.waitRun('INC-0041', (r) => r.state === 'VERIFIED');
+    expect(started.queuedBehind).toBeUndefined();
+  });
+
   it('AC-15: drift stops the repair and names the step that did not run', async () => {
     const t = setup();
     await t.scan();

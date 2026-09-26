@@ -43,7 +43,8 @@ export function PlanSteps({ plan, previous, catalog }: { plan: Plan; previous?: 
         {act.map((s, i) => {
           const was = before.get(s.id);
           const changed = !!previous && (!was || was.targetSummary !== s.targetSummary || was.title !== s.title || was.actionVersion !== s.actionVersion);
-          return <StepCard key={s.id} n={i + 1} step={s} open={open === s.id} onToggle={() => setOpen(open === s.id ? null : s.id)} changed={changed} why={catalog.find((c) => c.id === s.actionId)?.description} />;
+          const why = s.undoOf ? `Reverses an earlier step exactly, from what was saved before it ran: ${s.targetSummary.replace(/^undo:\s*/i, '')}` : catalog.find((c) => c.id === s.actionId)?.description;
+          return <StepCard key={s.id} n={i + 1} step={s} open={open === s.id} onToggle={() => setOpen(open === s.id ? null : s.id)} changed={changed} why={why} />;
         })}
       </ol>
       {removed.length > 0 && (

@@ -54,6 +54,8 @@ interface EngineState {
   fault: Fault;
   helperUntrusted: boolean;
   scanSeq: number;
+  /** Approvals waiting for the lock (spec §8: other repairs queue). Started in order when the lock frees. */
+  queued?: Record<string, { approvalId: string; planHash: string }>;
 }
 
 export class EngineError extends Error {
@@ -546,6 +548,9 @@ export class Engine {
       await this.save();
       fail(err('E_APPROVAL_MISMATCH', 'The plan changed after you approved it', 'Nothing ran.', 'Review the new plan', { ref: fresh.id }));
     }
+    if (this.s.lock.held && this.s.lock.incidentId === plan.incidentId) {
+      fail(err('E_MUTATION_BUSY', 'A repair for this incident is already running', 'Nothing new ran.', 'Open the running repair', { ref: this.s.lock.executionId }));
+    }
     const lockHeld = this.s.lock.held && this.s.lock.incidentId !== plan.incidentId;
     if (lockHeld || this.s.fault === 'busy') {
       const behind = lockHeld ? this.s.lock.incidentId! : 'INC-0043';
@@ -554,6 +559,7 @@ export class Engine {
       run.error = err('E_MUTATION_BUSY', 'Queued behind ' + behind, 'Nothing has run yet.', 'Cancel');
       this.log(run, 'Waiting for the repair on ' + behind + ' to finish', 'warn');
       if (!this.s.lock.queue.includes(plan.incidentId)) this.s.lock.queue.push(plan.incidentId);
+      if (lockHeld) (this.s.queued ??= {})[plan.incidentId] = { approvalId, planHash };
       this.s.runs[plan.incidentId] = run;
       const inc = await this.incidentGet(plan.incidentId);
       inc.status = 'queued';
@@ -755,6 +761,7 @@ export class Engine {
     this.s.lock = { held: false, queue: this.s.lock.queue };
     if (state === 'VERIFIED') this.log(run, 'Incident verified · lock released', 'ok');
     else this.log(run, 'Lock released', 'info');
+    setTimeout(() => { void this.startNextQueued(); }, 0);
     this.addHistory(state === 'VERIFIED' || state === 'PARTIALLY_VERIFIED' ? 'verification' : 'action', `${inc.id} ${state === 'VERIFIED' ? 'verified' : state.toLowerCase().replace(/_/g, ' ')}`, run.activity.slice(-2).map((a) => a.text).join(' · '), inc.id, 'engine');
     await this.setState(run, state);
   }
@@ -781,6 +788,7 @@ export class Engine {
       run!.queuedBehind = undefined;
       run!.error = undefined;
       this.s.lock.queue = this.s.lock.queue.filter((q) => q !== inc.id);
+      if (this.s.queued) delete this.s.queued[inc.id];
       inc.status = 'open';
       this.log(run!, 'Cancelled · nothing ran', 'info');
     } else if (decision === 'keep') {
@@ -800,6 +808,32 @@ export class Engine {
     await this.save();
     this.emitRun(run!);
     return run!;
+  }
+
+  /** When the lock frees, start the next queued repair — its approval is re-validated like any other start. */
+  private async startNextQueued() {
+    if (this.s.lock.held) return;
+    const next = this.s.lock.queue.find((id) => this.s.queued?.[id]);
+    if (!next) return;
+    const q = this.s.queued![next];
+    delete this.s.queued![next];
+    this.s.lock.queue = this.s.lock.queue.filter((x) => x !== next);
+    const queuedRun = this.s.runs[next];
+    try {
+      await this.runStart(q.approvalId, q.planHash);
+    } catch (e) {
+      const api = e instanceof EngineError ? e.api : err('E_ACTION_FAILED', 'The queued repair couldn’t start', 'Nothing ran.');
+      if (queuedRun) {
+        queuedRun.state = 'CANCELLED';
+        queuedRun.queuedBehind = undefined;
+        queuedRun.error = { ...api, headline: api.code === 'E_APPROVAL_EXPIRED' ? 'This approval ran out while it was queued' : api.headline };
+        this.log(queuedRun, queuedRun.error.headline + ' · nothing ran', 'warn');
+        this.emitRun(queuedRun);
+      }
+      const inc = this.s.incidents[next];
+      if (inc) inc.status = 'open';
+      await this.save();
+    }
   }
 
   // ───────────────────────────── recovery (screen 11) ─────────────────────────────

@@ -82,11 +82,11 @@ export default function Plan() {
         />
       }
     >
-      <main id="main" className="col" style={{ gap: 18 }}>
+      <div className="col" style={{ gap: 18 }}>
         <section className="col gap-4" aria-labelledby="ch-plan-h">
           <div className="col" style={{ gap: 6 }}>
             <span className="t-overline">{kindWord} · {id}</span>
-            <h1 id="ch-plan-h" className="t-h1">Here’s the fix</h1>
+            <h1 id="ch-plan-h" className="t-h1">{variant === 'undo' ? 'Here’s the undo plan' : plan.kind === 'setup' ? 'Here’s the setup plan' : 'Here’s the fix'}</h1>
             <p className="c-muted" style={{ fontSize: 14 }}>{plan.title}</p>
           </div>
           <PlanStats plan={plan} />
@@ -105,6 +105,13 @@ export default function Plan() {
             <span>Another repair ({lock!.incidentId}) is running. You can still approve this plan — it waits its turn and nothing runs until the other one ends.</span>
           </div>
         )}
+        {plan.kind === 'guided' && (
+          <div className="ch-note neutral">
+            <Icon name="restart" size={16} />
+            <span className="grow">This repair spans restarts. The step-by-step guide shows what you’ll see at each step.</span>
+            <LinkButton to={`/incidents/${id}/guided`} size="sm">Open the guide</LinkButton>
+          </div>
+        )}
         {plan.isolationNote && (
           <div className="ch-note ok">
             <Icon name="shieldCheck" size={16} />
@@ -114,7 +121,7 @@ export default function Plan() {
 
         <PlanSteps plan={plan} previous={a.changed?.previous} catalog={catalog} />
         <VerificationContract plan={plan} />
-      </main>
+      </div>
     </Page>
   );
 }

@@ -52,6 +52,7 @@ export function useApproval(o: ApprovalOptions) {
     const key = opts.current.loadKey;
     setLoading(true);
     setLoadError(null);
+    setPlan(null);
     const r = await opts.current.load();
     if (!mounted.current || keyRef.current !== key) return;
     if (r.ok) { setPlan(r.data); setLoadError(null); } else { setPlan(null); setLoadError(r.error); }

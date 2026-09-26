@@ -105,10 +105,10 @@ export default function Guided() {
     const rs = runStep(s.id);
     let state: Item['state'] = 'todo';
     if (before || rs?.state === 'done') state = 'done';
-    if (rs?.state === 'failed' || rs?.state === 'not_run') state = 'bad';
+    if (rs?.state === 'failed') state = 'bad';
     const rIdx = restartIds.indexOf(s.id);
     const restartLabel = rIdx >= 0 ? `Restart ${rIdx + 1} of ${restartIds.length}` : undefined;
-    const sub = before ? 'Done before the restart' : rs?.state === 'done' && !restartLabel ? 'Done' : restartLabel ?? s.targetSummary;
+    const sub = before ? 'Done before the restart' : rs?.state === 'not_run' ? 'Didn’t run' : rs?.state === 'failed' ? 'Didn’t finish' : rs?.state === 'done' && !restartLabel ? 'Done' : restartLabel ?? s.targetSummary;
     return { id: s.id, title: s.title, sub, state, step: s, restartLabel };
   });
   items.push({
@@ -119,7 +119,7 @@ export default function Guided() {
   const waitingId = run?.state === 'WAITING_FOR_REBOOT' ? run.steps[run.stepIndex]?.id : undefined;
   if (run && isActiveRun(run.state) && !verifying && !run.queuedBehind) currentIdx = items.findIndex((it) => it.id === run.steps[run.stepIndex]?.id);
   else if (verifying || run?.state === 'VERIFIED' || run?.state === 'PARTIALLY_VERIFIED') currentIdx = items.length - 1;
-  else if (run && !isActiveRun(run.state)) currentIdx = items.findIndex((it) => it.state === 'bad');
+  else if (run && !isActiveRun(run.state)) currentIdx = items.findIndex((it) => it.state === 'bad' || it.state === 'todo');
   else currentIdx = items.findIndex((it) => it.state === 'todo');
   if (currentIdx < 0) currentIdx = items.length - 1;
   if (items[currentIdx].state === 'todo' || items[currentIdx].id === waitingId) items[currentIdx] = { ...items[currentIdx], state: 'now' };
@@ -151,7 +151,7 @@ export default function Guided() {
           </ol>
         </Card>
 
-        <main id="main" className="ch-gmain">
+        <div className="ch-gmain">
           {overlay && run && <AdminHandoff run={run} mode="overlay" onAllow={allow} onDecline={decline} onClose={closeOverlay} busy={!!f.deciding} />}
           {!overlay && run?.adminPrompt && <AdminHandoff run={run} mode="inline" onAllow={allow} onDecline={decline} busy={!!f.deciding} />}
           {earlier && !run && (
@@ -184,7 +184,7 @@ export default function Guided() {
               <span className="t-small c-muted">A restore point comes first and the old driver package is kept for undo. If the screen stays black, hold the power button for 10 s — you’ll be offered undo on the next start.</span>
             </span>
           </Card>
-        </main>
+        </div>
       </div>
     </Page>
   );
@@ -217,6 +217,14 @@ function StepCard({ item, no, plan, run, f }: { item: Item; no: number; plan: Pl
     status = <p className="row c-accent" role="status" style={{ gap: 10 }}><Spinner label="Working" />Working on it…</p>;
   } else if (item.verify && run && ['EXECUTED', 'VERIFYING', 'VERIFIED', 'PARTIALLY_VERIFIED'].includes(run.state)) {
     status = (
+      <>
+      {(run.state === 'VERIFIED' || run.state === 'PARTIALLY_VERIFIED') && (
+        <div className={`ch-note ${run.state === 'VERIFIED' ? 'ok' : 'warn'}`} role="status">
+          <Icon name={run.state === 'VERIFIED' ? 'check' : 'alert'} size={16} />
+          <span className="grow">{run.state === 'VERIFIED' ? 'Fixed and verified — every check passed.' : 'Partly fixed — not every check passed, so it isn’t marked fixed.'}</span>
+          <LinkButton to={`/incidents/${run.incidentId}${run.state === 'VERIFIED' ? '/run' : ''}`} size="sm">{run.state === 'VERIFIED' ? 'See details' : 'See what we learned'}</LinkButton>
+        </div>
+      )}
       <ul className="ch-final" aria-label="Verification checks" aria-live="polite">
         {run.verification.map((v) => (
           <li key={v.id} data-check-state={v.state}>
@@ -226,6 +234,7 @@ function StepCard({ item, no, plan, run, f }: { item: Item; no: number; plan: Pl
           </li>
         ))}
       </ul>
+      </>
     );
   } else if (run && !isActiveRun(run.state)) {
     status = (

@@ -17,7 +17,8 @@ export function useRunFollow(incidentId: string, opts: { load?: boolean } = {}) 
   const load = useCallback(async () => {
     setLoadError(null);
     const r = await ask('run.get', { incidentId });
-    if (r.ok) setRun((prev) => (r.data ? newerRun(prev, r.data) : prev));
+    // Never carry a run over from another incident (the route component is reused when only :id changes).
+    if (r.ok) setRun((prev) => { const same = prev?.incidentId === incidentId ? prev : null; return r.data ? newerRun(same, r.data) : same; });
     else setLoadError(r.error);
     setLoaded(true);
   }, [incidentId]);
@@ -37,7 +38,7 @@ export function useRunFollow(incidentId: string, opts: { load?: boolean } = {}) 
 
   const adopt = useCallback((r: RunProgress) => setRun((prev) => newerRun(prev, r)), []);
 
-  return { run, adopt, loaded, loadError, load, decide, deciding, decideError };
+  return { run: run && run.incidentId === incidentId ? run : null, adopt, loaded, loadError, load, decide, deciding, decideError };
 }
 
 export type RunFollow = ReturnType<typeof useRunFollow>;
