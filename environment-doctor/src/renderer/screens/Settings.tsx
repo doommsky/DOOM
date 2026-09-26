@@ -273,7 +273,7 @@ export default function Settings() {
           <Link to="/design" className="t-small row" style={{ marginTop: 18, gap: 6, padding: '0 12px' }}><Icon name="grid" size={14} />Design system</Link>
         </div>
         <section className="lib-settings-body" aria-labelledby="settings-section-title">
-          <div className="col" style={{ gap: 6, paddingTop: 46 }}>
+          <div className="lib-settings-head">
             <h2 className="t-h2" id="settings-section-title">{cur.label}</h2>
             <p className="c-muted" style={{ fontSize: 14 }}>{cur.intro}</p>
           </div>

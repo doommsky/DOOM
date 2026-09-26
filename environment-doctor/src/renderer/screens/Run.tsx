@@ -11,7 +11,7 @@ import { AdminHandoff } from '../components/AdminHandoff';
 import { Icon } from '../components/Icon';
 import { Page } from '../components/Shell';
 import { Button, Card, EmptyState, ErrorState, LinkButton, LoadingState, ProgressRing, RadioCard, Spinner, StatusChip, clock, journalLabel } from '../components/ui';
-import { ask } from './change/api';
+import { ask, isActiveRun } from './change/api';
 import { useRunFollow, type RunFollow } from './change/useRunFollow';
 import '../styles/change.css';
 
@@ -222,7 +222,8 @@ function Steps({ run, plan }: { run: RunProgress; plan: Plan | null }) {
       </div>
       <ol className="ch-rows" aria-label="Steps">
         {run.steps.map((s, i) => {
-          const st = STEP_STATE[s.state];
+          // A step still “pending” in a run that has ended will never run — say so (never “waiting”).
+          const st = STEP_STATE[s.state === 'pending' && !isActiveRun(run.state) ? 'not_run' : s.state];
           const ps = plan?.steps.find((x) => x.id === s.id);
           return (
             <li key={s.id} data-state={s.state} className={s.state === 'running' ? 'now' : ''}>

@@ -114,7 +114,13 @@ table.table.lib-table th[scope='row'] { text-align: left; text-transform: none; 
 .lib-setrow .lbl { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
 .lib-setrow .note { font-size: 12.5px; line-height: 1.45; color: var(--subtle); }
 .lib-select { height: 36px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--border-strong); background: var(--inset); color: var(--text); }
-@media (max-width: 1099px) { .lib-settings { flex-direction: column; } .lib-settings-nav { width: auto; flex-direction: row; flex-wrap: wrap; } }
+.lib-settings-head { display: flex; flex-direction: column; gap: 6px; padding-top: 46px; }
+@media (max-width: 1099px) {
+  .lib-settings { flex-direction: column; align-items: stretch; gap: 12px; }
+  .lib-settings-nav { width: auto; }
+  .lib-settings-nav > nav { flex-direction: row; flex-wrap: wrap; }
+  .lib-settings-head { padding-top: 8px; }
+}
 
 /* ───────── Design system ───────── */
 .lib-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
