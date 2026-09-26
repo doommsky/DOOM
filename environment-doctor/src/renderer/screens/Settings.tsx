@@ -148,14 +148,19 @@ function Privacy({ s, save, errors }: { s: SettingsT; save: Save; errors: Record
   );
 }
 
-function Diagnostics({ s, save, errors }: { s: SettingsT; save: Save; errors: Record<string, ApiError | undefined> }) {
-  const [root, setRoot] = useState('');
-  const inputId = useId();
+function Diagnostics({ s, save, errors, onSettings }: { s: SettingsT; save: Save; errors: Record<string, ApiError | undefined>; onSettings: (s: SettingsT) => void }) {
+  const [rootError, setRootError] = useState<ApiError | null>(null);
   const roots = s.diagnostics.projectRoots;
+  // Folders only come from the native picker in the desktop app — the renderer never supplies paths (spec §2).
   const add = async () => {
-    const v = root.trim();
-    if (!v || roots.includes(v)) return;
-    if (await save('diagnostics.projectRoots', [...roots, v])) setRoot('');
+    setRootError(null);
+    const r = await call('projects.addRoot');
+    if (r.ok) onSettings(r.data); else setRootError(r.error);
+  };
+  const remove = async (index: number) => {
+    setRootError(null);
+    const r = await call('projects.removeRoot', { index });
+    if (r.ok) onSettings(r.data); else setRootError(r.error);
   };
   return (
     <>
@@ -169,23 +174,23 @@ function Diagnostics({ s, save, errors }: { s: SettingsT; save: Save; errors: Re
       <section className="col gap-3" aria-labelledby="roots-title">
         <div className="col" style={{ gap: 4 }}>
           <h3 className="t-title" id="roots-title">Project folders</h3>
-          <p className="t-small c-subtle">Folders we look in for projects. Only requirement files are read. Run a scan after changing this.</p>
+          <p className="t-small c-subtle">Common folders (source\repos, projects, dev, code, Documents\GitHub…) are found automatically. Add others here. Only requirement files are read. Run a scan after changing this.</p>
         </div>
         <Card className="lib-flush">
-          {roots.length === 0 && <div className="lib-setrow"><span className="t-small c-subtle">No project folders yet — the Projects page stays empty until you add one.</span></div>}
-          {roots.map((r) => (
+          {roots.length === 0 && <div className="lib-setrow"><span className="t-small c-subtle">No extra project folders — only the common locations are searched.</span></div>}
+          {roots.map((r, i) => (
             <div key={r} className="lib-setrow">
               <Icon name="folder" size={15} className="c-muted" />
               <span className="mono t-small grow" style={{ overflowWrap: 'anywhere' }}>{r}</span>
-              <Button size="sm" variant="ghost" aria-label={`Remove ${r}`} onClick={() => { void save('diagnostics.projectRoots', roots.filter((x) => x !== r)); }}>Remove</Button>
+              <Button size="sm" variant="ghost" aria-label={`Remove ${r}`} onClick={() => { void remove(i); }}>Remove</Button>
             </div>
           ))}
         </Card>
-        <form className="row gap-3" onSubmit={(e) => { e.preventDefault(); void add(); }}>
-          <label htmlFor={inputId} className="sr-only">Project folder to add</label>
-          <input id={inputId} className="input" placeholder="Folder path, e.g. D:\work" value={root} onChange={(e) => setRoot(e.target.value)} style={{ maxWidth: 420 }} />
-          <Button type="submit" size="sm" icon="plus" disabled={!root.trim()}>Add folder</Button>
-        </form>
+        <div className="row gap-3">
+          <Button size="sm" icon="plus" onClick={() => { void add(); }}>Add folder…</Button>
+          <span className="t-small c-subtle">Opens the Windows folder picker</span>
+        </div>
+        {rootError && <InlineError error={rootError} />}
         {errors['diagnostics.projectRoots'] && <InlineError error={errors['diagnostics.projectRoots']!} />}
       </section>
     </>
@@ -281,7 +286,7 @@ export default function Settings() {
           {s.error && <ErrorState error={s.error} onRetry={s.reload} />}
           {s.data && key === 'general' && <General s={s.data} save={save} errors={errors} />}
           {s.data && key === 'privacy' && <Privacy s={s.data} save={save} errors={errors} />}
-          {s.data && key === 'diagnostics' && <Diagnostics s={s.data} save={save} errors={errors} />}
+          {s.data && key === 'diagnostics' && <Diagnostics s={s.data} save={save} errors={errors} onSettings={s.set} />}
           {s.data && key === 'updates' && <Updates s={s.data} save={save} errors={errors} />}
           {s.data && key === 'data' && <Data s={s.data} />}
         </section>

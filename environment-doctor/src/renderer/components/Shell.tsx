@@ -98,7 +98,7 @@ export function Page({ crumbs, actions, children, split, aside, bleed }: { crumb
         </div>
       </header>
       {split
-        ? <div className="content-split"><div className="primary">{children}</div><aside className="aside" aria-label="Details">{aside}</aside></div>
+        ? <main className="content-split"><div className="primary">{children}</div><aside className="aside" aria-label="Details">{aside}</aside></main>
         : bleed ? children : <main className="content">{children}</main>}
     </>
   );
