@@ -75,6 +75,8 @@ export class Orchestrator {
     const before = deepGet(this.settings, path);
     if (before === undefined) fail({ code: 'E_INVALID_REQUEST', headline: 'Unknown setting: ' + path });
     if (typeof before !== typeof value && !(Array.isArray(before) && Array.isArray(value))) fail({ code: 'E_INVALID_REQUEST', headline: 'Wrong type for ' + path });
+    // Project folders only come from the native picker (desktop) — the renderer never supplies paths.
+    if (path === 'diagnostics.projectRoots' && Array.isArray(value) && value.some((v) => !(before as string[]).includes(v))) fail({ code: 'E_POLICY_DENIED', headline: 'Use “Add folder” to choose a project folder', didNotHappen: 'Nothing changed.' });
     const next = clone(this.settings);
     deepSet(next as unknown as Record<string, unknown>, path, value);
     this.settings = next;
@@ -152,9 +154,26 @@ export class Orchestrator {
       case 'settings.get': await this.ready; return this.settings;
       case 'settings.set': return this.setSetting(str('path'), r.value);
       case 'palette.commands': return this.commands();
+      case 'projects.addRoot': return fail({ code: 'E_POLICY_DENIED', headline: 'Adding folders needs the desktop app', didNotHappen: 'Nothing changed.' });
+      case 'projects.removeRoot': {
+        await this.ready;
+        const i = typeof r.index === 'number' ? r.index : -1;
+        const roots = this.settings.diagnostics.projectRoots.filter((_, k) => k !== i);
+        return this.setSetting('diagnostics.projectRoots', roots);
+      }
       case 'demo.fault': return e.setFault((r.fault as never) ?? 'none');
       case 'demo.reset': return e.reset();
     }
+  }
+
+  /** Called by Electron main after the native folder picker — the only way a path enters settings. */
+  async addProjectRoot(folder: string): Promise<Settings> {
+    await this.ready;
+    const next = clone(this.settings);
+    if (!next.diagnostics.projectRoots.includes(folder)) next.diagnostics.projectRoots = [...next.diagnostics.projectRoots, folder].slice(0, 20);
+    this.settings = next;
+    await this.o.host.save('settings', this.settings);
+    return this.settings;
   }
 
   /** First run is shown until the first scan finished (Handoff screen 01). */

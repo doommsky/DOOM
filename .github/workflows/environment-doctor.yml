@@ -2,6 +2,7 @@ name: Environment Doctor
 
 on:
   push:
+    branches: [main]
     paths: ['environment-doctor/**', '.github/workflows/environment-doctor.yml']
   pull_request:
     paths: ['environment-doctor/**', '.github/workflows/environment-doctor.yml']

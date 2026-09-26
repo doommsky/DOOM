@@ -24,6 +24,7 @@ if (!app.commandLine.hasSwitch('no-sandbox')) app.enableSandbox();
 let win: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let orchestrator: Orchestrator;
+let projectRoots: string[] = [];
 
 function emit<S extends keyof Streams>(stream: S, data: Streams[S]) {
   if (win && !win.isDestroyed()) win.webContents.send('ed:stream', stream, data);
@@ -32,16 +33,14 @@ function emit<S extends keyof Streams>(stream: S, data: Streams[S]) {
 
 function createOrchestrator() {
   const host = createNodeHost(path.join(app.getPath('userData'), 'state'), emit, async () => net.isOnline());
-  let roots: string[] = [];
   const o = new Orchestrator({
     host,
     defaultMode: 'live',
     datasets: {
-      live: () => new LiveDataset({ sleep: host.sleep, appVersion: app.getVersion(), projectRoots: () => roots }),
+      live: () => new LiveDataset({ sleep: host.sleep, appVersion: app.getVersion(), projectRoots: () => projectRoots }),
       demo: () => new DemoDataset({ sleep: host.sleep }),
     },
   });
-  void o.handle('settings.get', undefined).then((r) => { if (r.ok) roots = r.data.diagnostics.projectRoots; });
   return o;
 }
 
@@ -78,8 +77,15 @@ function registerIpc() {
     // Sender validation on every call (spec §25, §34 “IPC sender spoofing”): unknown senders get no response.
     if (!isTrustedSender(e.senderFrame, e.sender)) return undefined;
     if (typeof channel !== 'string' || !allowed.has(channel)) return { ok: false, error: { code: 'E_INVALID_REQUEST', headline: 'Unknown request' } };
-    if (channel === 'settings.set') {
-      const r = await orchestrator.handle('settings.set', req as never);
+    if (channel === 'projects.addRoot') {
+      const pick = await dialog.showOpenDialog(win!, { title: 'Add a project folder', properties: ['openDirectory'] });
+      if (pick.canceled || !pick.filePaths[0]) return orchestrator.handle('settings.get', undefined);
+      const s = await orchestrator.addProjectRoot(pick.filePaths[0]);
+      applySettings(s);
+      return { ok: true, data: s };
+    }
+    if (channel === 'settings.set' || channel === 'projects.removeRoot') {
+      const r = await orchestrator.handle(channel, req as never);
       if (r.ok) applySettings(r.data);
       return r;
     }
@@ -87,7 +93,8 @@ function registerIpc() {
   });
 }
 
-function applySettings(s: { general: { launchAtLogin: boolean; trayIcon: boolean } }) {
+function applySettings(s: { general: { launchAtLogin: boolean; trayIcon: boolean }; diagnostics: { projectRoots: string[] } }) {
+  projectRoots = s.diagnostics.projectRoots.filter((r) => typeof r === 'string' && path.isAbsolute(r));
   try { app.setLoginItemSettings({ openAtLogin: s.general.launchAtLogin }); } catch { /* unsupported platform */ }
   if (s.general.trayIcon && !tray) createTray();
   if (!s.general.trayIcon && tray) { tray.destroy(); tray = null; }

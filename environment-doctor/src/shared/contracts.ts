@@ -541,6 +541,9 @@ export interface Channels {
   'settings.get': { req: void; res: Settings };
   'settings.set': { req: { path: string; value: unknown }; res: Settings };
   'palette.commands': { req: void; res: CommandEntry[] };
+  /** Desktop only: opens the native folder picker in main and adds the folder to diagnostics.projectRoots. */
+  'projects.addRoot': { req: void; res: Settings };
+  'projects.removeRoot': { req: { index: number }; res: Settings };
   'demo.fault': { req: { fault: Fault }; res: { fault: Fault } };
   'demo.reset': { req: void; res: { ok: true } };
 }
@@ -555,7 +558,7 @@ export const CHANNELS = [
   'run.start', 'run.get', 'run.decide', 'lock.get', 'recovery.get', 'recovery.recheck', 'recovery.resolve',
   'evidence.list', 'evidence.get', 'redaction.preview', 'blueprints.list', 'setup.dryRun', 'projects.list',
   'project.get', 'actions.catalog', 'history.list', 'settings.get', 'settings.set', 'palette.commands',
-  'demo.fault', 'demo.reset',
+  'projects.addRoot', 'projects.removeRoot', 'demo.fault', 'demo.reset',
 ] as const satisfies readonly Channel[];
 
 export interface Streams {
