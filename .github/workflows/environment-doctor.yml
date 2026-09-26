@@ -1,0 +1,62 @@
+name: Environment Doctor
+
+on:
+  push:
+    branches: [main]
+    paths: ['environment-doctor/**', '.github/workflows/environment-doctor.yml']
+  pull_request:
+    paths: ['environment-doctor/**', '.github/workflows/environment-doctor.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: environment-doctor
+
+jobs:
+  test:
+    name: Tests (typecheck · unit · UI flows · Electron smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: environment-doctor/package-lock.json }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright test
+      - run: xvfb-run -a npx playwright test -c playwright.electron.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-traces, path: environment-doctor/test-results, retention-days: 7 }
+
+  windows:
+    name: Windows build (installer + portable exe) and live collector check
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: environment-doctor/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+      - name: Live read-only scan on a real Windows machine (CLI)
+        shell: pwsh
+        run: |
+          node dist-electron/cli/doctor.js check --format json | Tee-Object -FilePath live-scan.json
+          $code = $LASTEXITCODE
+          Write-Host "doctor check exit code: $code (0 healthy, 1 problems, 4 unknowns)"
+          if ($code -ge 5) { exit 1 } else { exit 0 }
+      - name: Electron smoke test (real main process, preload, live engine)
+        run: npx playwright test -c playwright.electron.config.ts
+      - name: Package
+        run: npx electron-builder --win --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Environment-Doctor-Windows
+          path: |
+            environment-doctor/release/*.exe
+            environment-doctor/live-scan.json
+          retention-days: 30

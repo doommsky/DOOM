@@ -1,0 +1,49 @@
+/* Board 23 · Design tokens v1.0 — the single source of colour, type, spacing, radius and motion.
+   Components use these custom properties only; no hard-coded hex outside this file. */
+:root {
+  color-scheme: dark;
+  --bg: #0A0B0E;
+  --sidebar: #0E1014;
+  --inset: #0F1115;
+  --surface: #13161B;
+  --raised: #181C24;
+  --hover: #1A1E25;
+  --selected: #252A33;
+  --border: #1F242B;
+  --border-soft: #1C2026;
+  --border-strong: #2A2F37;
+  --border-accent: #2C3150;
+
+  --text: #ECEEF1;
+  --text-2: #C9CED6;
+  --muted: #A4ABB6;
+  --subtle: #7D8591;
+  --faint: #4A515C;
+
+  --accent: #8B9CFF;
+  --accent-hover: #B3BFFF;
+  --accent-ink: #0B0E1F;
+  --accent-tint: rgba(139, 156, 255, 0.14);
+  --ok: #3DD68C;
+  --ok-tint: rgba(61, 214, 140, 0.12);
+  --ok-line: #2A5A43;
+  --warn: #F5B84A;
+  --warn-2: #F5C97A;
+  --warn-tint: rgba(245, 184, 74, 0.12);
+  --danger: #FF8F8F;
+  --danger-dot: #FF6B6B;
+  --danger-tint: rgba(255, 107, 107, 0.14);
+  --neutral-tint: #1F232B;
+
+  --font: 'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s7: 28px; --s8: 32px;
+  --r-sm: 6px; --r-md: 9px; --r-lg: 12px; --r-xl: 14px; --r-2xl: 18px; --r-pill: 999px;
+  --dur-fast: 120ms; --dur-base: 200ms; --spin: 900ms;
+  --shadow-dialog: 0 30px 80px rgba(0, 0, 0, 0.55);
+
+  --sidebar-w: 244px;
+  --rail-w: 64px;
+  --header-h: 60px;
+}
